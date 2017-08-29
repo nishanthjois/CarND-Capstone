@@ -1,0 +1,30 @@
+FROM ubuntu:16.04
+
+# Install ROS
+RUN apt-get update  && \
+    apt-get install --assume-yes lsb-release &&  \
+    echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list && \
+    apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116 && \
+    apt-get update  && \
+    apt-get install --assume-yes    \
+        build-essential             \
+        python                      \
+        python-pip                  \
+        wget                        \
+        ros-kinetic-desktop-full && \
+    rosdep init && \
+    rosdep update && \
+    apt-get autoremove -y && \
+    apt-get autoclean -y
+
+# Install DBW
+RUN wget https://bitbucket.org/DataspeedInc/dbw_mkz_ros/raw/default/dbw_mkz/scripts/sdk_install.bash && \
+    sed -i 's/sudo //g' sdk_install.bash && \
+    /bin/bash sdk_install.bash && \
+    rm sdk_install.bash
+
+# Install Python dependencies
+ADD requirements.txt /tmp
+WORKDIR /tmp
+RUN pip install -r requirements.txt && \
+    rm requirements.txt
