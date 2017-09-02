@@ -4,12 +4,9 @@ set -e
 THIS_DIR="$(readlink -m "$(dirname "$0")")"
 ROS_DIR="$THIS_DIR/ros"
 
-# Check that the build folder exists
-if [ ! -d "$ROS_DIR/build" ]
-then
-    echo "Please run the build.sh command first!"
-    exit 1
-fi
+# Re-build the code
+echo "Building the code..."
+$THIS_DIR/build.sh
 
 # Launch simulator if it's not running yet
 if pgrep "system_integr" > /dev/null
