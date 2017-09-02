@@ -9,4 +9,4 @@ before_install:
   - export DISPLAY=:1.0
 
 script:
-  - ./ros/build.sh
+  - ./build.sh

@@ -15,7 +15,8 @@ RUN apt-get update  && \
     rosdep init && \
     rosdep update && \
     apt-get autoremove -y && \
-    apt-get autoclean -y
+    apt-get autoclean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install DBW
 RUN wget https://bitbucket.org/DataspeedInc/dbw_mkz_ros/raw/default/dbw_mkz/scripts/sdk_install.bash && \
