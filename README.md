@@ -6,11 +6,11 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 * Build all the code:
 
-    $ ./build.sh
+      $ ./build.sh
 
 * Run code and simulator:
 
-    $ ./run.sh
+      $ ./run.sh
 
 
 ### Installation 
