@@ -24,7 +24,7 @@ docker run --rm=true --tty=true --interactive=true               \
            --volume="$THIS_DIR":"$THIS_DIR"                      \
            --workdir="$ROS_DIR"                                  \
            --network=host                                        \
-           carlosgalvezp/carnd_capstone /bin/bash -c             \
+           eurobots/carnd_capstone /bin/bash -c                  \
            "source /opt/ros/kinetic/setup.bash;
             source devel/setup.bash;
             roslaunch launch/styx.launch"
