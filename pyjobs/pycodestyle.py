@@ -5,7 +5,7 @@ ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 ROS_SRC_DIR = os.path.realpath(os.path.join(ROOT_DIR, 'ros', 'src'))
 PYJOBS_DIR = os.path.realpath(os.path.join(ROOT_DIR, 'pyjobs'))
 
-N_MAX_ERRORS = 121
+N_MAX_ERRORS = 71
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
     cmd = ['docker', 'run', '--rm=true',
            '--volume={}:{}'.format(ROOT_DIR, ROOT_DIR),
            'eurobots/carnd_capstone',
-           'pycodestyle', '--count', ROS_SRC_DIR, PYJOBS_DIR]
+           'pycodestyle', '--statistics', '--count', ROS_SRC_DIR, PYJOBS_DIR]
 
     try:
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)

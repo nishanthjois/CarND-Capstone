@@ -31,7 +31,7 @@ TYPE = {
     'steer_cmd': SteeringCmd,
     'brake_cmd': BrakeCmd,
     'throttle_cmd': ThrottleCmd,
-    'image':Image
+    'image': Image
 }
 
 
@@ -122,10 +122,10 @@ class Bridge(object):
     def broadcast_transform(self, name, position, orientation):
         br = tf.TransformBroadcaster()
         br.sendTransform(position,
-            orientation,
-            rospy.Time.now(),
-            name,
-            "world")
+                         orientation,
+                         rospy.Time.now(),
+                         name,
+                         "world")
 
     def publish_odometry(self, data):
         pose = self.create_pose(data['x'], data['y'], data['z'], data['yaw'])
@@ -135,10 +135,9 @@ class Bridge(object):
         self.broadcast_transform("base_link", position, orientation)
 
         self.publishers['current_pose'].publish(pose)
-        self.vel = data['velocity']* 0.44704
+        self.vel = data['velocity'] * 0.44704
         self.angular = self.calc_angular(data['yaw'] * math.pi/180.)
         self.publishers['current_velocity'].publish(self.create_twist(self.vel, self.angular))
-
 
     def publish_controls(self, data):
         steering, throttle, brake = data['steering_angle'], data['throttle'], data['brake']
