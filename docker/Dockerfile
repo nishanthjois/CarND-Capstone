@@ -27,5 +27,5 @@ RUN wget https://bitbucket.org/DataspeedInc/dbw_mkz_ros/raw/default/dbw_mkz/scri
 # Install Python dependencies
 ADD requirements.txt /tmp
 WORKDIR /tmp
-RUN pip install -r requirements.txt && \
+RUN pip install --upgrade --requirement requirements.txt && \
     rm requirements.txt
