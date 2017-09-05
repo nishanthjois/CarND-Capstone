@@ -27,19 +27,23 @@ class TLDetector(object):
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         '''
-        /vehicle/traffic_lights helps you acquire an accurate ground truth data source for the traffic light
-        classifier, providing the location and current color state of all traffic lights in the
-        simulator. This state can be used to generate classified images or subbed into your solution to
-        help you work on another single component of the node. This topic won't be available when
-        testing your solution in real life so don't rely on it in the final submission.
+        /vehicle/traffic_lights helps you acquire an accurate ground truth
+        data source for the traffic light classifier, providing the location
+        and current color state of all traffic lights in the simulator.
+        This state can be used to generate classified images or subbed into
+        your solution to help you work on another single component of the node.
+        This topic won't be available when testing your solution in real life
+        so don't rely on it in the final submission.
         '''
-        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray,
+                                self.traffic_cb)
         sub6 = rospy.Subscriber('/camera/image_raw', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint',
+                                                      Int32, queue_size=1)
 
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
@@ -62,8 +66,9 @@ class TLDetector(object):
         self.lights = msg.lights
 
     def image_cb(self, msg):
-        """Identifies red lights in the incoming camera image and publishes the index
-            of the waypoint closest to the red light to /traffic_waypoint
+        """Identifies red lights in the incoming camera image and publishes
+            the index of the waypoint closest to the red light to
+            /traffic_waypoint
 
         Args:
             msg (Image): image from car-mounted camera
@@ -133,7 +138,8 @@ class TLDetector(object):
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             rospy.logerr("Failed to find camera to map transform")
 
-        # TODO Use tranform and rotation to calculate 2D position of light in image
+        # TODO Use tranform and rotation to calculate 2D position of light
+        # in image
 
         x = 0
         y = 0
@@ -147,7 +153,8 @@ class TLDetector(object):
             light (TrafficLight): light to classify
 
         Returns:
-            int: ID of traffic light color (specified in styx_msgs/TrafficLight)
+            int: ID of traffic light color
+                 (specified in styx_msgs/TrafficLight)
 
         """
         if(not self.has_image):
@@ -165,12 +172,14 @@ class TLDetector(object):
         return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
-        """Finds closest visible traffic light, if one exists, and determines its
-            location and color
+        """Finds closest visible traffic light, if one exists,
+           and determines its location and color
 
         Returns:
-            int: index of waypoint closes to the upcoming traffic light (-1 if none exists)
-            int: ID of traffic light color (specified in styx_msgs/TrafficLight)
+            int: index of waypoint closes to the upcoming traffic light
+                 (-1 if none exists)
+            int: ID of traffic light color
+                 (specified in styx_msgs/TrafficLight)
 
         """
         light = None

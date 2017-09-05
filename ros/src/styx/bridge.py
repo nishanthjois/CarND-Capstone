@@ -49,10 +49,12 @@ class Bridge(object):
             '/vehicle/brake_cmd': self.callback_brake,
         }
 
-        self.subscribers = [rospy.Subscriber(e.topic, TYPE[e.type], self.callbacks[e.topic])
+        self.subscribers = [rospy.Subscriber(e.topic, TYPE[e.type],
+                                             self.callbacks[e.topic])
                             for e in conf.subscribers]
 
-        self.publishers = {e.name: rospy.Publisher(e.topic, TYPE[e.type], queue_size=1)
+        self.publishers = {e.name: rospy.Publisher(e.topic, TYPE[e.type],
+                                                   queue_size=1)
                            for e in conf.publishers}
 
     def register_server(self, server):
@@ -81,7 +83,8 @@ class Bridge(object):
         pose.pose.position.y = y
         pose.pose.position.z = z
 
-        q = tf.transformations.quaternion_from_euler(0., 0., math.pi * yaw/180.)
+        yaw_rad = math.pi * yaw/180.
+        q = tf.transformations.quaternion_from_euler(0., 0., yaw_rad)
         pose.pose.orientation = Quaternion(*q)
 
         return pose
@@ -131,16 +134,21 @@ class Bridge(object):
         pose = self.create_pose(data['x'], data['y'], data['z'], data['yaw'])
 
         position = (data['x'], data['y'], data['z'])
-        orientation = tf.transformations.quaternion_from_euler(0, 0, math.pi * data['yaw']/180.)
+        yaw_rad = math.pi * data['yaw']/180.
+        orientation = tf.transformations.quaternion_from_euler(0, 0, yaw_rad)
         self.broadcast_transform("base_link", position, orientation)
 
         self.publishers['current_pose'].publish(pose)
         self.vel = data['velocity'] * 0.44704
         self.angular = self.calc_angular(data['yaw'] * math.pi/180.)
-        self.publishers['current_velocity'].publish(self.create_twist(self.vel, self.angular))
+        self.publishers['current_velocity'].publish(
+                                    self.create_twist(self.vel, self.angular))
 
     def publish_controls(self, data):
-        steering, throttle, brake = data['steering_angle'], data['throttle'], data['brake']
+        steering = data['steering_angle']
+        throttle = data['throttle']
+        brake = data['brake']
+
         self.publishers['steering_report'].publish(self.create_steer(steering))
         self.publishers['throttle_report'].publish(self.create_float(throttle))
         self.publishers['brake_report'].publish(self.create_float(brake))
@@ -156,18 +164,23 @@ class Bridge(object):
         self.publishers['obstacle_points'].publish(cloud)
 
     def publish_lidar(self, data):
-        self.publishers['lidar'].publish(self.create_point_cloud_message(zip(data['lidar_x'], data['lidar_y'], data['lidar_z'])))
+        self.publishers['lidar'].publish(self.create_point_cloud_message(
+                                zip(data['lidar_x'],
+                                    data['lidar_y'],
+                                    data['lidar_z'])))
 
     def publish_traffic(self, data):
-        x, y, z = data['light_pos_x'], data['light_pos_y'], data['light_pos_z'],
-        yaw = [math.atan2(dy, dx) for dx, dy in zip(data['light_pos_dx'], data['light_pos_dy'])]
+        x, y, z = data['light_pos_x'], data['light_pos_y'], data['light_pos_z']
+        yaw = [math.atan2(dy, dx) for dx, dy in zip(data['light_pos_dx'],
+                                                    data['light_pos_dy'])]
         status = data['light_state']
 
         lights = TrafficLightArray()
         header = Header()
         header.stamp = rospy.Time.now()
         header.frame_id = 'world'
-        lights.lights = [self.create_light(*e) for e in zip(x, y, z, yaw, status)]
+        lights.lights = [self.create_light(*e) for e in zip(x, y, z, yaw,
+                                                            status)]
         self.publishers['trafficlights'].publish(lights)
 
     def publish_dbw_status(self, data):
@@ -178,11 +191,13 @@ class Bridge(object):
         image = PIL_Image.open(BytesIO(base64.b64decode(imgString)))
         image_array = np.asarray(image)
 
-        image_message = self.bridge.cv2_to_imgmsg(image_array, encoding="passthrough")
+        image_message = self.bridge.cv2_to_imgmsg(image_array,
+                                                  encoding="passthrough")
         self.publishers['image'].publish(image_message)
 
     def callback_steering(self, data):
-        self.server('steer', data={'steering_angle': str(data.steering_wheel_angle_cmd)})
+        self.server('steer', data={'steering_angle':
+                                   str(data.steering_wheel_angle_cmd)})
 
     def callback_throttle(self, data):
         self.server('throttle', data={'throttle': str(data.pedal_cmd)})
