@@ -64,7 +64,8 @@ class WaypointLoader(object):
         last = waypoints[-1]
         last.twist.twist.linear.x = 0.
         for wp in waypoints[:-1][::-1]:
-            dist = self.distance(wp.pose.pose.position, last.pose.pose.position)
+            dist = self.distance(wp.pose.pose.position,
+                                 last.pose.pose.position)
             vel = math.sqrt(2 * MAX_DECEL * dist) * 3.6
             if vel < 1.:
                 vel = 0.
