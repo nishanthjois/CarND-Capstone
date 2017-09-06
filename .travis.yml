@@ -13,4 +13,4 @@ before_install:
 
 script:
   - ./build.sh
-  - python -m pyjobs.pycodestyle
+  - python ./pyjobs/pycodestyle.py
