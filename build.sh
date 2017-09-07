@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-THIS_DIR="$(readlink -m "$(dirname "$0")")"
+THIS_DIR="$(pwd)"
 ROS_DIR="$THIS_DIR/ros"
 
 docker run --rm=true --tty=true --volume="$ROS_DIR":"$ROS_DIR" \
