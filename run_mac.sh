@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-THIS_DIR="$(pwd)"
+THIS_DIR="$(cd "$(dirname "$0")" && pwd -P && cd - > /dev/null)"
 ROS_DIR="$THIS_DIR/ros"
 
 # Re-build the code
@@ -25,7 +25,7 @@ docker run --rm=true --tty=true --interactive=true               \
            --volume="$THIS_DIR":"$THIS_DIR"                      \
            --workdir="$ROS_DIR"                                  \
             -p 4567:4567 \
-           carlosgalvezp/carnd_capstone /bin/bash -c             \
+           eurobots/carnd_capstone /bin/bash -c             \
            "source /opt/ros/kinetic/setup.bash;
             source devel/setup.bash;
             roslaunch launch/styx.launch"

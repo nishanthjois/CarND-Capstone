@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-THIS_DIR="$(pwd)"
+THIS_DIR="$(cd "$(dirname "$0")" && pwd -P && cd - > /dev/null)"
 ROS_DIR="$THIS_DIR/ros"
 
 docker run --rm=true --tty=true --volume="$ROS_DIR":"$ROS_DIR" \
