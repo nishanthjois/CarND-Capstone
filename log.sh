@@ -4,7 +4,7 @@ set -e
 THIS_DIR="$(pwd)"
 ROS_DIR="$THIS_DIR/ros"
 
-CONTAINER_ID="$(docker ps | grep carlosgalvezp/carnd_capstone | cut -b 1-12)"
+CONTAINER_ID="$(docker ps | grep eurobots/carnd_capstone | cut -b 1-12)"
 
 FILENAME="rosout.log"
 
@@ -15,6 +15,7 @@ docker exec -it $CONTAINER_ID  \
            echo tail -f $FILENAME
            tail -f -n 50 $FILENAME"
 
+## available log files
 #dbw_node-3-stdout.log
 #dbw_node-3.log
 #master.log
