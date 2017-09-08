@@ -12,14 +12,10 @@ project:
 Initial setup
 -------------
 
-To setup your environment, follow these steps:
+To setup your environment, clone the
+[team's repository](https://github.com/CarND-EuroBots/CarND-Capstone):
 
-1. Go to the [`CarND-Eurobots/CarND-Capstone`](https://github.com/CarND-EuroBots/CarND-Capstone) repository and click on `Fork`. This will create a fork of the repo in
-your personal GitHub account.
-
-2. From command line, run:
-
-       $ git clone <url to the FORK>
+    $ git clone git@github.com:CarND-EuroBots/CarND-Capstone.git
 
 Contribute
 ----------
@@ -54,12 +50,13 @@ To add some changes to the repository, follow these steps:
    **NOTE**: see the `Commit messages` section below on how to write a
    valid commit message.
 
-7. Push to your own GitHub fork:
+7. Push your changes:
 
        $ git push origin <my_branch>
 
 8. From the GitHub user interface, click on `New Pull Request` from
-   `<user>/CarND-Capstone:<my_branch>` to `<CarND-Eurobots/CarND-Capstone:master`.
+   `<CarND-Eurobots/CarND-Capstone:<my_branch>` to
+   `<CarND-Eurobots/CarND-Capstone:master`.
 
 9. Repeat steps from 4 if you wish to add more changes.
 
@@ -74,22 +71,30 @@ To add some changes to the repository, follow these steps:
 
 Updating from upstream
 ----------------------
+To get changes from the team's contributors, simply run:
 
-To get changes from other contributors into your fork, follow these steps:
+    $ git pull origin master
 
-1. Add the team's repository as a remote:
+Updating from Udacity's upstream
+--------------------------------
 
-       $ git remote add upstream git@github.com:CarND-EuroBots/CarND-Capstone.git
+To get changes from Udacity, follow these steps:
+
+1. Add Udacity's repository as a remote:
+
+       $ git remote add upstream https://github.com/udacity/CarND-Capstone.git
 
 2. Go to your master branch:
 
        $ git checkout master
 
-3. Fetch and merge the changes from the remote `master`:
+3. Pull the changes from `upstream`:
 
-       $ git pull upstream/master
+       $ git pull upstream master
 
-4. Optionally, push these changes to your own fork:
+4. Fix merge conflicts, if any.
+
+5. Push these changes to the team's repository:
 
        $ git push origin master
 
