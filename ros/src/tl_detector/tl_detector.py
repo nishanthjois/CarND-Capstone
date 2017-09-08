@@ -113,26 +113,28 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
-        
+
         # Very high value is set as as initial distance.
         closest_waypoint_dist = 100000
         closest_waypoint_ind = -1
 
         # Looping through base waypoints to find the one closest to the car.
         for i in range(0, len(self.waypoints.waypoints)):
-            waypoint_distance = self.distance(self.waypoints.waypoints[i].pose.pose.position, 
-                                                pose.position)
+            waypoint_distance = self.distance(
+                self.waypoints.waypoints[i].pose.pose.position,
+                pose.position
+            )
             if waypoint_distance < closest_waypoint_dist:
-                # In case that closer waypoint has been found, set new distance and new closest waypoint index.
+                # In case that closer waypoint has been found,
+                # set new distance and new closest waypoint index.
                 closest_waypoint_dist = waypoint_distance
                 closest_waypoint_ind = i
 
-        # It is irrelevant if the closest waypoint is in front or behind the car 
-        # because we will need to search for traffic lights x meters in front of the car anyway. 
+        # It is irrelevant if the closest waypoint is in front or
+        # behind the car because we will need to search for traffic lights
+        #  x meters in front of the car anyway.
 
         return closest_waypoint_ind
-
-
 
     def project_to_image_plane(self, point_in_world):
         """Project point from 3D world coordinates to 2D camera image location
@@ -224,7 +226,7 @@ class TLDetector(object):
         light_positions = self.config['light_positions']
         if(self.pose and self.waypoints):
             car_position = self.get_closest_waypoint(self.pose.pose)
-            
+
         # TODO find the closest visible traffic light (if one exists)
 
         if light:
