@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import numpy as np
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
 from styx_msgs.msg import TrafficLightArray, TrafficLight
@@ -78,12 +79,10 @@ class TLDetector(object):
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
 
-        '''
-        Publish upcoming red lights at camera frequency.
-        Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-        of times till we start using it. Otherwise the previous stable state is
-        used.
-        '''
+        # Publish upcoming red lights at camera frequency.
+        # Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
+        # of times till we start using it.
+        # Otherwise the previous stable state is used.
         if self.state != state:
             self.state_count = 0
             self.state = state
@@ -116,17 +115,16 @@ class TLDetector(object):
             point_in_world (Point): 3D location of a point in the world
 
         Returns:
-            x (int): x coordinate of target point in image
-            y (int): y coordinate of target point in image
+            u (int): u coordinate of target point in image
+            v (int): v coordinate of target point in image
 
         """
-
         fx = self.config['camera_info']['focal_length_x']
         fy = self.config['camera_info']['focal_length_y']
         image_width = self.config['camera_info']['image_width']
         image_height = self.config['camera_info']['image_height']
 
-        # get transform between pose of camera and world frame
+        # Get transform between pose of camera and world frame
         trans = None
         try:
             now = rospy.Time.now()
@@ -138,13 +136,27 @@ class TLDetector(object):
         except (tf.Exception, tf.LookupException, tf.ConnectivityException):
             rospy.logerr("Failed to find camera to map transform")
 
-        # TODO Use tranform and rotation to calculate 2D position of light
-        # in image
+        # Create transformation matrix
+        T = self.listener.fromTranslationRotation(trans, rot)
 
-        x = 0
-        y = 0
+        # Transform light position from map to world coordinates
+        point_in_world_h = np.array([[point_in_world.x],
+                                     [point_in_world.y],
+                                     [point_in_world.z],
+                                     [1.0]])
 
-        return (x, y)
+        point_in_camera_h = np.dot(T, point_in_world_h)
+
+        # Project to image plane to get u,v image coordinates
+        # Note that X is pointing forward, Y to the left and Z up
+        x_in_camera = point_in_camera_h[0][0]
+        y_in_camera = point_in_camera_h[1][0]
+        z_in_camera = point_in_camera_h[2][0]
+
+        u = int(-(fx / x_in_camera) * y_in_camera)
+        v = int(-(fy / x_in_camera) * z_in_camera)
+
+        return (u, v)
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
@@ -193,6 +205,7 @@ class TLDetector(object):
             state = self.get_light_state(light)
             return light_wp, state
         self.waypoints = None
+
         return -1, TrafficLight.UNKNOWN
 
 
