@@ -6,7 +6,7 @@ import cv2
 import yaml
 import numpy as np
 from std_msgs.msg import Int32
-from geometry_msgs.msg import PoseStamped, Pose
+from geometry_msgs.msg import PoseStamped, Pose, Point
 from styx_msgs.msg import TrafficLightArray, TrafficLight
 from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
@@ -169,9 +169,9 @@ class TLDetector(object):
         point_in_camera_h = np.dot(T, point_in_world_h)
 
         # Output as a Point
-        point_in_camera = tf.Point(point_in_camera_h[0][0],
-                                   point_in_camera_h[1][0],
-                                   point_in_camera_h[2][0])
+        point_in_camera = Point(point_in_camera_h[0][0],
+                                point_in_camera_h[1][0],
+                                point_in_camera_h[2][0])
         return point_in_camera
 
     def project_to_image_plane(self, point_in_camera):
@@ -214,7 +214,9 @@ class TLDetector(object):
         light_pos_camera = self.transform_world_to_camera(light_pos_world)
 
         # Get coordinate of top-left corner of bounding box
-        corner = tf.Point(light_pos_camera)
+        corner = Point(light_pos_camera.x,
+                       light_pos_camera.y,
+                       light_pos_camera.z)
 
         LIGHT_CROP_OFFSET_Y = 0.25  # [m]
         LIGHT_CROP_OFFSET_Z = 0.5   # [m]
