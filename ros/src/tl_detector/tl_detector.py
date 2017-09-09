@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import math
 import rospy
+import tf
+import cv2
+import yaml
 import numpy as np
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
@@ -9,9 +12,6 @@ from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
-import tf
-import cv2
-import yaml
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -136,22 +136,15 @@ class TLDetector(object):
 
         return closest_waypoint_ind
 
-    def project_to_image_plane(self, point_in_world):
-        """Project point from 3D world coordinates to 2D camera image location
-
+    def transform_world_to_camera(self, point_in_world):
+        """
+        Transforms a point from 3D world coordinates to 3D camera coordinates
         Args:
             point_in_world (Point): 3D location of a point in the world
 
         Returns:
-            u (int): u coordinate of target point in image
-            v (int): v coordinate of target point in image
-
+            point_in_camera (Point): 3D location of a point in the camera frame
         """
-        fx = self.config['camera_info']['focal_length_x']
-        fy = self.config['camera_info']['focal_length_y']
-        image_width = self.config['camera_info']['image_width']
-        image_height = self.config['camera_info']['image_height']
-
         # Get transform between pose of camera and world frame
         trans = None
         try:
@@ -167,7 +160,7 @@ class TLDetector(object):
         # Create transformation matrix
         T = self.listener.fromTranslationRotation(trans, rot)
 
-        # Transform light position from map to world coordinates
+        # Transform point from world to camera using homogeneous coordinates
         point_in_world_h = np.array([[point_in_world.x],
                                      [point_in_world.y],
                                      [point_in_world.z],
@@ -175,16 +168,81 @@ class TLDetector(object):
 
         point_in_camera_h = np.dot(T, point_in_world_h)
 
+        # Output as a Point
+        point_in_camera = tf.Point(point_in_camera_h[0][0],
+                                   point_in_camera_h[1][0],
+                                   point_in_camera_h[2][0])
+        return point_in_camera
+
+    def project_to_image_plane(self, point_in_camera):
+        """
+        Projects point from 3D camera coordinates to 2D camera image location
+
+        Args:
+            point_in_camera (Point): 3D location of a point in the camera
+
+        Returns:
+            u (int): u coordinate of target point in image
+            v (int): v coordinate of target point in image
+
+        """
+        # Get camera intrinsics
+        fx = self.config['camera_info']['focal_length_x']
+        fy = self.config['camera_info']['focal_length_y']
+
         # Project to image plane to get u,v image coordinates
         # Note that X is pointing forward, Y to the left and Z up
-        x_in_camera = point_in_camera_h[0][0]
-        y_in_camera = point_in_camera_h[1][0]
-        z_in_camera = point_in_camera_h[2][0]
-
-        u = int(-(fx / x_in_camera) * y_in_camera)
-        v = int(-(fy / x_in_camera) * z_in_camera)
+        u = int(-(fx / point_in_camera.x) * point_in_camera.y)
+        v = int(-(fy / point_in_camera.x) * point_in_camera.z)
 
         return (u, v)
+
+    def crop_light_image(self, light, cv_image):
+        """
+        Crops the input image to keep only the part that
+        contains the requested traffic light
+
+        Args:
+            light (TrafficLight): light to get image of
+            cv_image (cv2 image): image to crop
+
+        Returns:
+            img_traffic_light (cv2 image): the cropped image
+        """
+        # Get light center in camera coordinates
+        light_pos_world = light.pose.pose.position
+        light_pos_camera = self.transform_world_to_camera(light_pos_world)
+
+        # Get coordinate of top-left corner of bounding box
+        corner = tf.Point(light_pos_camera)
+
+        LIGHT_CROP_OFFSET_Y = 0.25  # [m]
+        LIGHT_CROP_OFFSET_Z = 0.5   # [m]
+
+        corner.y += LIGHT_CROP_OFFSET_Y
+        corner.z += LIGHT_CROP_OFFSET_Z
+
+        # Project the previous points to the image plane
+        u_center, v_center = self.project_to_image_plane(light_pos_camera)
+        u_corner, v_corner = self.project_to_image_plane(corner)
+
+        # Compute offset w.r.t. center
+        off_u = abs(u_center - u_corner)
+        off_v = abs(v_center - v_corner)
+
+        # Crop the image to get the traffic light only
+        image_width = self.config['camera_info']['image_width']
+        image_height = self.config['camera_info']['image_height']
+
+        min_u = max(0, u_center - off_u)
+        max_u = min(u_center + off_u, image_width - 1)
+        min_v = max(0, v_center - off_v)
+        max_v = min(v_center + off_v, image_height - 1)
+
+        img_traffic_light = cv_image[min_u:max_u][min_v:max_v]
+
+        # Output
+        return img_traffic_light
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
@@ -204,12 +262,13 @@ class TLDetector(object):
         self.camera_image.encoding = "rgb8"
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
-        x, y = self.project_to_image_plane(light.pose.pose.position)
+        # Use light location to zoom in on traffic light in image
+        img_traffic_light = self.crop_light_image(light, cv_image)
 
-        # TODO use light location to zoom in on traffic light in image
+        # TODO(carlos): publish the cropped image on a ROS topic
 
         # Get classification
-        return self.light_classifier.get_classification(cv_image)
+        return self.light_classifier.get_classification(img_traffic_light)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists,
@@ -232,7 +291,6 @@ class TLDetector(object):
         if light:
             state = self.get_light_state(light)
             return light_wp, state
-        self.waypoints = None
 
         return -1, TrafficLight.UNKNOWN
 
