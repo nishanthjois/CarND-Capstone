@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import math
 import rospy
 import numpy as np
 from std_msgs.msg import Int32
@@ -95,6 +96,13 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
 
+    def distance(self, p1, p2):
+        """
+        Distance between two map coordinates copied from WaypointLoader class.
+        """
+        x, y, z = p1.x - p2.x, p1.y - p2.y, p1.z - p2.z
+        return math.sqrt(x*x + y*y + z*z)
+
     def get_closest_waypoint(self, pose):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
@@ -105,8 +113,28 @@ class TLDetector(object):
             int: index of the closest waypoint in self.waypoints
 
         """
-        # TODO implement
-        return 0
+
+        # Very high value is set as as initial distance.
+        closest_waypoint_dist = 100000
+        closest_waypoint_ind = -1
+
+        # Looping through base waypoints to find the one closest to the car.
+        for i in range(0, len(self.waypoints.waypoints)):
+            waypoint_distance = self.distance(
+                self.waypoints.waypoints[i].pose.pose.position,
+                pose.position
+            )
+            if waypoint_distance < closest_waypoint_dist:
+                # In case that closer waypoint has been found,
+                # set new distance and new closest waypoint index.
+                closest_waypoint_dist = waypoint_distance
+                closest_waypoint_ind = i
+
+        # It is irrelevant if the closest waypoint is in front or
+        # behind the car because we will need to search for traffic lights
+        #  x meters in front of the car anyway.
+
+        return closest_waypoint_ind
 
     def project_to_image_plane(self, point_in_world):
         """Project point from 3D world coordinates to 2D camera image location
@@ -196,7 +224,7 @@ class TLDetector(object):
         """
         light = None
         light_positions = self.config['light_positions']
-        if(self.pose):
+        if(self.pose and self.waypoints):
             car_position = self.get_closest_waypoint(self.pose.pose)
 
         # TODO find the closest visible traffic light (if one exists)
