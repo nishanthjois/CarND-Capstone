@@ -330,11 +330,13 @@ class TLDetector(object):
         return -1, TrafficLight.UNKNOWN
 
     def publish_cropped_image(self, cropped_image):
-        # Transform from OpenCV image to ROS Image
-        msg = self.bridge.cv2_to_imgmsg(cropped_image, encoding='bgr8')
+        if cropped_image.shape[0] > 0 and \
+           cropped_image.shape[1] > 0:
+            # Transform from OpenCV image to ROS Image
+            msg = self.bridge.cv2_to_imgmsg(cropped_image, encoding='bgr8')
 
-        # Publish
-        self.cropped_img_pub.publish(msg)
+            # Publish
+            self.cropped_img_pub.publish(msg)
 
 
 if __name__ == '__main__':
