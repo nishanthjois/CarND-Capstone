@@ -272,19 +272,15 @@ class TLDetector(object):
         return self.light_classifier.get_classification(img_traffic_light)
 
     def get_tl_waypoints(self):
-        """ Converts list self.config['light_positions'] with trafic
+        """ Converts array self.lights with trafic
         light positions to get_closest_waypoint_idx array with PoseStamped
         traffic light waypoints
 
         """
 
-        for light_position in self.config['light_positions']:
-            tl_waypoint = PoseStamped()
-            tl_waypoint.pose.position.x = light_position[0]
-            tl_waypoint.pose.position.y = light_position[1]
-            tl_waypoint.pose.position.z = 0
+        for light in self.lights:
             self.tl_waypoints.append(
-                self.get_closest_waypoint_idx(tl_waypoint.pose)
+                self.get_closest_waypoint_idx(light.pose.pose)
             )
 
     def process_traffic_lights(self):
