@@ -47,6 +47,8 @@ class TLDetector(object):
                                                       Int32, queue_size=1)
         self.cropped_img_pub = rospy.Publisher('/image_cropped',
                                                Image, queue_size=1)
+        self.log_pub = rospy.Publisher('/vehicle/visible_light_idx',
+                                       Int32, queue_size=1)
 
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
@@ -299,6 +301,8 @@ class TLDetector(object):
 
         light = None
         light_wp = -1
+        tl_idx = -1
+
         if(self.pose and self.waypoints):
             # In case that array with traffic light waypoints does not exist,
             # create it
@@ -307,18 +311,20 @@ class TLDetector(object):
             car_position_wp = self.get_closest_waypoint_idx(self.pose.pose)
             # Loop thorugh waypoints to find the closest traffic ligt waypoint
             smallest_tl_distance = 10000
-            for tl_waypoint in self.tl_waypoints:
+            for tl_idx_i, tl_waypoint in enumerate(self.tl_waypoints):
                 distance_between_waypoints = abs(car_position_wp-tl_waypoint)
                 if(distance_between_waypoints < searching_distance_tl and
                     distance_between_waypoints < smallest_tl_distance and
                         car_position_wp < tl_waypoint):
                     light_wp = tl_waypoint
+                    tl_idx = tl_idx_i
                     smallest_tl_distance = distance_between_waypoints
 
         # If waypoint has been found get traffic light state
         if light_wp > -1:
             light = self.waypoints.waypoints[light_wp]
-            state = self.get_light_state(light)
+            state = TrafficLight.UNKNOWN  # self.get_light_state(light)
+            self.log_pub.publish(tl_idx)
             return light_wp, state
 
         return -1, TrafficLight.UNKNOWN
