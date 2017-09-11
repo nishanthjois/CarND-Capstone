@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Rosbag player -->
+    <arg name="bag_file"/>
+    <node pkg="rosbag" type="play" name="player" args="--loop $(arg bag_file)"/>
+
+    <!-- Site launch file -->
+    <include file="$(find styx)../../launch/site.launch"/>
+</launch>
